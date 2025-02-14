@@ -83,16 +83,31 @@ def generate_frames(source):
         for result in results:
             classes_names = result.names
 
+        #     for box in result.boxes:
+        #         if box.conf[0] > 0.4:
+        #             x1, y1, x2, y2 = map(int, box.xyxy[0])
+        #             cls = int(box.cls[0])
+        #             class_name = classes_names[cls]
+        #             colour = getColours(cls)
+
+        #             cv2.rectangle(frame, (x1, y1), (x2, y2), colour, 2)
+        #             cv2.putText(frame, f"{class_name} {box.conf[0]:.2f}",
+        #                         (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, colour, 2)
+
             for box in result.boxes:
                 if box.conf[0] > 0.4:
-                    x1, y1, x2, y2 = map(int, box.xyxy[0])
                     cls = int(box.cls[0])
                     class_name = classes_names[cls]
-                    colour = getColours(cls)
 
-                    cv2.rectangle(frame, (x1, y1), (x2, y2), colour, 2)
-                    cv2.putText(frame, f"{class_name} {box.conf[0]:.2f}",
-                                (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, colour, 2)
+                    # Only track persons (class ID = 0)
+                    if class_name == "person":  # or cls == 0
+                        x1, y1, x2, y2 = map(int, box.xyxy[0])
+                        colour = getColours(cls)
+
+                        cv2.rectangle(frame, (x1, y1), (x2, y2), colour, 2)
+                        cv2.putText(frame, f"{class_name} {box.conf[0]:.2f}",
+                                    (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, colour, 2)
+
 
         _, buffer = cv2.imencode(".jpg", frame)
         frame_bytes = buffer.tobytes()
