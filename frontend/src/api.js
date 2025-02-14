@@ -17,3 +17,13 @@ export const startRTSPStream = async (rtspUrl) => {
 export const startYouTubeStream = async (youtubeUrl) => {
     return axios.post(`${API_BASE_URL}/start_youtube`, new URLSearchParams({ youtube_url: youtubeUrl }));
 };
+
+
+export const setGeoFenceAPI = async (geoFence) => {
+    try {
+        const response = await axios.post(`${API_BASE_URL}/set_geofence`, { geo_fence: geoFence }); 
+        console.log("Geo-Fence Set:", response.data);
+    } catch (error) {
+        console.error("Error setting geo-fence:", error);
+    }
+};
