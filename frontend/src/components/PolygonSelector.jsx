@@ -1,133 +1,73 @@
-// import React, { useState } from "react";
-
-// const PolygonSelector = ({ onPolygonComplete, containerRef }) => {
-//     const [points, setPoints] = useState([]);
-
-//     const handleClick = (event) => {
-//         if (!containerRef.current) return;
-
-//         // Get bounding box of video
-//         const rect = containerRef.current.getBoundingClientRect();
-//         const x = event.clientX - rect.left;
-//         const y = event.clientY - rect.top;
-
-//         // Ensure clicks are inside the video area
-//         if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
-//             setPoints([...points, { x, y }]);
-//             console.log("Clicked! - ",{x,y})
-//         }
-//     };
-
-//     const handleSetGeoFence = () => {
-//         if (points.length > 2) {
-//             onPolygonComplete(points); // ✅ Send polygon to parent component
-//         } else {
-//             alert("Please select at least 3 points to create a polygon.");
-//         }
-//     };
-
-//     const handleReset = () => {
-//         setPoints([]);
-//     };
-
-//     return (
-//         <div 
-//             style={{ 
-//                 position: "absolute", 
-//                 top: 0, left: 0, 
-//                 width: "100%", height: "100%", 
-//                 cursor: "crosshair",
-//                 pointerEvents: "auto" // Enables clicking
-//             }} 
-//             onClick={handleClick}
-//         >
-//             {points.map((point, index) => (
-//                 <div 
-//                     key={index} 
-//                     style={{
-//                         position: "absolute", 
-//                         width: "8px", height: "8px", 
-//                         background: "red", 
-//                         borderRadius: "50%",
-//                         top: point.y + "px", 
-//                         left: point.x + "px", 
-//                         transform: "translate(-50%, -50%)"
-//                     }} 
-//                 />
-//             ))}
-//         </div>
-//     );
-// };
-
-// export default PolygonSelector;
 
 
-import React, { useState } from "react";
 
-const PolygonSelector = ({ onPolygonComplete, containerRef }) => {
+import React, { useState, useEffect, useRef } from "react";
+
+const PolygonSelector = ({ onPolygonComplete, containerRef, geoFenceSet }) => {
     const [points, setPoints] = useState([]);
+    const canvasRef = useRef(null);
+
+    useEffect(() => {
+        drawPolygon(); // Redraw polygon when points change
+    }, [points, geoFenceSet]);
 
     const handleClick = (event) => {
-        if (!containerRef.current) return;
+        if (!containerRef.current || geoFenceSet) return;  // Disable if geo-fence is set
 
         // Get bounding box of video
         const rect = containerRef.current.getBoundingClientRect();
         const x = event.clientX - rect.left;
         const y = event.clientY - rect.top;
 
-        // Ensure clicks are inside the video area
-        // if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
-        //     setPoints([...points, { x, y }]);
-        //     console.log("Clicked - ",{x,y})
-        // }
-
         if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
             const newPoints = [...points, { x, y }];
             setPoints(newPoints);
-    
-            // Automatically send to parent when at least 3 points are selected
+
             if (newPoints.length >= 3) {
-                onPolygonComplete(newPoints);
+                onPolygonComplete(newPoints); // Send to parent
             }
         }
-        // console.log(points)
     };
 
-    const handleSetGeoFence = () => {
-        console.log("Inside handleSetGeoFence()")
-        console.log(points)
-        if (points.length > 2) {
-            onPolygonComplete(points); // Send polygon to parent component
-        } else {
-            alert("Please select at least 3 points to create a polygon.");
+    const drawPolygon = () => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+
+        // Clear previous drawings
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw the polygon if there are points
+        if (points.length > 1) {
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            points.forEach((point) => ctx.lineTo(point.x, point.y));
+            if (geoFenceSet) ctx.closePath(); // Complete polygon if set
+            ctx.strokeStyle = "red";
+            ctx.lineWidth = 2;
+            ctx.stroke();
         }
+
+        // Draw circles for each point
+        points.forEach((point) => {
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, 4, 0, 2 * Math.PI);
+            ctx.fillStyle = "red";
+            ctx.fill();
+        });
     };
 
     return (
         <div 
-            style={{ 
-                position: "absolute", 
-                top: 0, left: 0, 
-                width: "100%", height: "100%", 
-                cursor: "crosshair",
-                pointerEvents: "auto" // Enables clicking
-            }} 
+            style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }} 
             onClick={handleClick}
         >
-            {points.map((point, index) => (
-                <div 
-                    key={index} 
-                    style={{
-                        position: "absolute", 
-                        width: "8px", height: "8px", 
-                        background: "red", 
-                        borderRadius: "50%",
-                        top: `${point.y}px`, 
-                        left: `${point.x}px`, 
-                        transform: "translate(-50%, -50%)"
-                    }} 
-                />
-            ))}
+            <canvas 
+                ref={canvasRef} 
+                width={containerRef.current?.offsetWidth || 640} 
+                height={containerRef.current?.offsetHeight || 480} 
+                style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none" }}
+            />
         </div>
     );
 };
