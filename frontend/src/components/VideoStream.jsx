@@ -6,10 +6,12 @@
 import { useState, useRef } from "react";
 import PolygonSelector from "./PolygonSelector";
 import { setGeoFenceAPI } from "../api";
+import { resetGeoFenceAPI } from "../api";  
 
 const VideoStream = ({ source }) => {
     const [geoFence, setGeoFence] = useState([]);
     const [geoFenceSet, setGeoFenceSet] = useState(false);
+    const [resetTrigger, setResetTrigger] = useState(0); 
     const videoContainerRef = useRef(null);
 
     const handlePolygonComplete = (points) => {
@@ -40,10 +42,15 @@ const VideoStream = ({ source }) => {
             console.error("Error setting geo-fence:", error);
         }
     };
-
-    const handleReset = () => {
-        setGeoFence([]);
-        setGeoFenceSet(false); // Allow new selection
+    const handleReset = async () => {
+        try {
+            await resetGeoFenceAPI(); // Call backend to reset geo-fence
+            setGeoFence([]);  // Clear frontend geo-fence state
+            setGeoFenceSet(false);  // Allow new selection
+            setResetTrigger(prev => prev + 1);  // Increment resetTrigger to force re-render
+        } catch (error) {
+            console.error("Error resetting geo-fence:", error);
+        }
     };
 
     return (
@@ -56,6 +63,7 @@ const VideoStream = ({ source }) => {
                     alt="Video Stream" 
                     // width="640" 
                     // height="480" 
+                    
                 />
 
                 <div 
@@ -65,6 +73,7 @@ const VideoStream = ({ source }) => {
                         onPolygonComplete={handlePolygonComplete} 
                         containerRef={videoContainerRef} 
                         geoFenceSet={geoFenceSet} 
+                        resetTrigger={resetTrigger}
                     />
                 </div>
             </div>

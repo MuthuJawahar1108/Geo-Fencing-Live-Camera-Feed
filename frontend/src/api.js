@@ -27,3 +27,9 @@ export const setGeoFenceAPI = async (geoFence) => {
         console.error("Error setting geo-fence:", error);
     }
 };
+export const resetGeoFenceAPI = async () => {
+    const response = await fetch(`${API_BASE_URL}/reset_geofence`, {
+        method: "POST",
+    });
+    return response.json();
+};

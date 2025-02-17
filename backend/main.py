@@ -149,6 +149,16 @@ async def set_geofence(data: PolygonData):
 
     return {"message": "Geo-fence set successfully!", "geo_fence": geo_fence_polygon}
 
+
+@app.post("/reset_geofence")
+async def reset_geofence():
+    """Resets the geo-fence polygon data."""
+    global geo_fence_polygon
+    geo_fence_polygon = []  # Clear stored points
+    print("Geo-Fence Reset!")
+    return {"message": "Geo-fence reset successfully!"}
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

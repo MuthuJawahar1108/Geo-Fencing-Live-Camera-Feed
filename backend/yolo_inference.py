@@ -35,7 +35,7 @@ def is_point_inside_polygon(point, polygon):
     print("Point type:", type(point), "Point value:", point)
 
     # Run pointPolygonTest
-    result = cv2.pointPolygonTest(polygon_np, point, False)
+    result = cv2.pointPolygonTest(polygon_np, point, True)
 
     print("PointPolygonTest Result:", result)  # Should be 1 (inside), -1 (outside), 0 (on edge)
     return result >= 0  # True if inside or on the edge

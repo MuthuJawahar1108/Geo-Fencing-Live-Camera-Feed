@@ -3,13 +3,22 @@
 
 import React, { useState, useEffect, useRef } from "react";
 
-const PolygonSelector = ({ onPolygonComplete, containerRef, geoFenceSet }) => {
+const PolygonSelector = ({ onPolygonComplete, containerRef, geoFenceSet, resetTrigger }) => {
     const [points, setPoints] = useState([]);
     const canvasRef = useRef(null);
 
     useEffect(() => {
-        drawPolygon(); // Redraw polygon when points change
+        drawPolygon();
     }, [points, geoFenceSet]);
+
+
+    // Only clear canvas when resetTrigger changes (reset button clicked)
+    useEffect(() => {
+        if (resetTrigger > 0) {  // Ensure it only triggers after first render
+            setPoints([]);  // Clear stored points
+            clearCanvas();
+        }
+    }, [resetTrigger]);
 
     const handleClick = (event) => {
         if (!containerRef.current || geoFenceSet) return;  // Disable if geo-fence is set
@@ -56,6 +65,14 @@ const PolygonSelector = ({ onPolygonComplete, containerRef, geoFenceSet }) => {
             ctx.fill();
         });
     };
+
+    const clearCanvas = () => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
+    };
+
 
     return (
         <div 
